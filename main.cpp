@@ -147,7 +147,7 @@ int WINAPI WinMain(
 	try
     {
         LogToFile("Creating game instance...");
-        Cake game;
+        Tunnel game;
         
         LogToFile("Activating screensaver mode...");
         game.ActivateScreenSaverMode(mode, previewHwnd);
