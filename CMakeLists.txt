@@ -8,7 +8,31 @@ set(KISSFFT_TEST OFF CACHE BOOL "Disable KissFFT tests" FORCE)
 
 set(KISSFFT_STATIC ON CACHE BOOL "Build static library" FORCE)
 
-add_subdirectory(${CMAKE_SOURCE_DIR}/../../Engine ${CMAKE_BINARY_DIR}/out/Engine)
+set(FE_EXCLUDE_JOLT ON CACHE BOOL "Disable JOLT" FORCE)
+
+set(ENGINE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../FenixEngine")
+
+# add_subdirectory(${CMAKE_SOURCE_DIR}/../FenixEngine/src/Engine ${CMAKE_BINARY_DIR}/out/Engine)
+
+
+set(USE_STATIC_MSVC_RUNTIME_LIBRARY OFF CACHE BOOL "Use dynamic MSVC runtime to match rest of project" FORCE)
+
+if(CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "" FORCE)
+endif()
+
+
+if(NOT TARGET Engine)
+    message(STATUS "Engine target not found. Looking for engine source...")
+    
+    if(EXISTS "${ENGINE_DIR}/CMakeLists.txt")
+        add_subdirectory("${ENGINE_DIR}" FenixEngine)
+    # elif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/FenixEngine/CMakeLists.txt")
+    #     add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/FenixEngine" FenixEngine)
+    else()
+        message(FATAL_ERROR "FenixEngine not found!")
+    endif()
+endif()
 
 set(IMGUI_DIR ../../../external/imgui)
 
@@ -32,13 +56,13 @@ add_executable(Tunnel
 
 target_include_directories(Tunnel PRIVATE
 	include
-	../..
-	../../../include
-	../../../external
-	../../../external/imgui
-	../../../external/kissfft
-	../../../external/SDL/include
-	../../Engine
+	${ENGINE_DIR}
+	${ENGINE_DIR}/include
+	${ENGINE_DIR}/external
+	${ENGINE_DIR}/external/imgui
+	${ENGINE_DIR}/external/kissfft
+	${ENGINE_DIR}/external/SDL/include
+	${ENGINE_DIR}/src/Engine
 )
 
 target_link_libraries(Tunnel PRIVATE
