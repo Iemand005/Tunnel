@@ -118,7 +118,7 @@ public:
 	}
 
 	void GrowPath(int count) {
-		float t = window->GetTime();
+		float t = GetWindow()->GetTime();
 		int freeSeg = (path.size() - 4) / 3;
 		float sl = segmentLength;
 		for (int i = 0; i < count; i++) {
@@ -262,7 +262,7 @@ public:
 					break;
 				case SDL_EVENT_MOUSE_MOTION:
 				{
-					if (!window->capturingMouse) break;
+					if (!window->IsCapturingMouse()) break;
 					float sensitivity = 0.1f;
 					camera->yaw   += event.motion.xrel * sensitivity;
 					camera->pitch -= event.motion.yrel * sensitivity;
