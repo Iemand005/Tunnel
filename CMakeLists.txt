@@ -92,3 +92,22 @@ if(MSVC)
 endif()
 
 # set_target_properties(Tunnel PROPERTIES SUFFIX ".scr")
+
+
+if(EMSCRIPTEN)
+    set(CMAKE_EXECUTABLE_SUFFIX ".html")
+    
+    target_compile_options(Tunnel PRIVATE
+        -g
+        -fdebug-compilation-dir="${CMAKE_SOURCE_DIR}"
+    )
+    target_link_options(Tunnel PRIVATE
+        -g
+        -gsource-map
+    )
+    
+    set_target_properties(Tunnel PROPERTIES
+        SUFFIX ".html"
+        LINK_FLAGS "-s USE_WEBGL2=1 -s FULL_ES3=1 -sGL_ENABLE_GET_PROC_ADDRESS=1 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=64MB -s NO_EXIT_RUNTIME=1 -s EXIT_RUNTIME=0 -s MAX_WEBGL_VERSION=2 -s MIN_WEBGL_VERSION=2 -sFORCE_FILESYSTEM=1 -sEXPORTED_RUNTIME_METHODS=FS,ccall,cwrap -sEXPORTED_FUNCTIONS=_main,_emscripten_file_dialog_callback,_malloc,_free --preload-file ${CMAKE_CURRENT_SOURCE_DIR}/resources@resources"
+    )
+endif()
