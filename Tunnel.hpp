@@ -304,7 +304,7 @@ public:
 		if (ImGui::GetIO().WantCaptureMouse) window->StopMouseCapture();
 	}
 
-	void Init() {
+	void Init() override {
 		auto window = this->GetWindow<fe::SDLWindow>();
 		window->Show();
 		window->DisableVSync();
@@ -313,18 +313,21 @@ public:
 		player->state.position.y = 2;
 		camera->farDist = farPlane;
 		camera->SetAspect(camera->aspect);
-		float elapsedTimeBumpy = 0.0f;
-		float elapsedTime = 0.0f;
 	}
 
-	void Run() {
-		Init();
+	float elapsedTimeBumpy = 0.0f;
+	float elapsedTime = 0.0f;
+
+	// void Run() {
+	// 	Init();
+	// 	auto window = GetWindow();
+	// 	while (!window->ShouldClose()) Step();
+	// 	Destroy();
+	// }
+
+	void Step() override {
 		auto window = GetWindow();
-		while (!window->ShouldClose()) Step();
-		Destroy();
-	}
-
-	void Step() {
+		
 		ProcessInput();
 		visualizer.Update();
 
