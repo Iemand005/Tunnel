@@ -326,8 +326,8 @@ public:
 	// }
 
 	void Step() override {
-		auto window = GetWindow();
-		
+		auto window = GetWindow<fe::SDLWindow>();
+
 		ProcessInput();
 		visualizer.Update();
 
