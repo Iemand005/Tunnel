@@ -75,8 +75,13 @@ public:
 
 		SetClearColor(1, 1, 0);
 
-		LoadShaders("resources/shaders/VertexShader.glsl", "resources/shaders/FragmentShader.glsl");
-
+#ifdef __EMSCRIPTEN__
+		if (!useVulkan)
+			LoadShaders("resources/shaders/VertexShader_es.glsl", "resources/shaders/FragmentShader_es.glsl");
+#else
+		if (!useVulkan)
+			LoadShaders("resources/shaders/VertexShader.glsl", "resources/shaders/FragmentShader.glsl");
+#endif
 		LoadModels();
 
 		visualizer.Init();
@@ -299,7 +304,7 @@ public:
 		if (ImGui::GetIO().WantCaptureMouse) window->StopMouseCapture();
 	}
 
-	void Run() {
+	void Init() {
 		auto window = this->GetWindow<fe::SDLWindow>();
 		window->Show();
 		window->DisableVSync();
@@ -310,83 +315,88 @@ public:
 		camera->SetAspect(camera->aspect);
 		float elapsedTimeBumpy = 0.0f;
 		float elapsedTime = 0.0f;
+	}
 
-		while (!window->ShouldClose()) {
-
-			ProcessInput();
-			visualizer.Update();
-
-			float totalMagnitude = 0.0f;
-			for (int i = 0; i < NUM_BARS; ++i) {
-				totalMagnitude += visualizer.bandMagnitudes[i];
-			}
-			float avgMagnitude = totalMagnitude / NUM_BARS;
-
-			float speed = baseSpeedElapsedTimeBumpy + (avgMagnitude * audioAmplitudeScale * audioSpeedMultiplier);
-			elapsedTimeBumpy += speed;
-			elapsedTime += baseSpeedElapsedTime;
-
-			float colorR = sin(elapsedTime * bgColorFreq) * 0.5f + 0.5f;
-			float colorG = sin(elapsedTime * bgColorFreq + 2.094f) * 0.5f + 0.5f;
-			float colorB = sin(elapsedTime * bgColorFreq + 4.189f) * 0.5f + 0.5f;
-			SetClearColor(colorR, colorG, colorB);
-
-			pathIndex += baseSpeedElapsedTime * cameraSpeed;
-
-			while (pathIndex > (float)(windowStart / SHIFT) + 1.0f)
-				SlideChunks();
-
-			if (freeCamera) {
-				float dt = fpsCounter.deltaTime;
-				float spd = freeCamSpeed * dt;
-				glm::vec3 cp = camera->GetPos();
-				glm::vec3 right = glm::normalize(glm::cross(camera->front, camera->up));
-				if (window->IsKeyDown(SDL_SCANCODE_W)) cp += camera->front * spd;
-				if (window->IsKeyDown(SDL_SCANCODE_S)) cp -= camera->front * spd;
-				if (window->IsKeyDown(SDL_SCANCODE_A)) cp -= right * spd;
-				if (window->IsKeyDown(SDL_SCANCODE_D)) cp += right * spd;
-				if (window->IsKeyDown(SDL_SCANCODE_SPACE)) cp += camera->up * spd;
-				if (window->IsKeyDown(SDL_SCANCODE_LSHIFT)) cp -= camera->up * spd;
-				camera->SetPos(cp);
-				glm::vec3 riderPos = GetGlobalPosition(pathIndex);
-				player->state.position = riderPos;
-				scene->GetLights()[0].position = riderPos;
-			} else {
-				glm::vec3 cameraPos = GetGlobalPosition(pathIndex);
-				camera->SetPos(cameraPos);
-				glm::vec3 tangent = GetGlobalTangent(pathIndex);
-				camera->LookAt(cameraPos + glm::normalize(tangent) * 10.0f);
-				scene->GetLights()[0].position = cameraPos;
-			}
-
-			float audioR = 0.0f, audioG = 0.0f, audioB = 0.0f;
-			for (int i = 0; i < NUM_BARS; i++) {
-				float val = visualizer.bandMagnitudesSmoothed[i];
-				float frac = (float)i / NUM_BARS;
-				audioR += val * (1.0f - frac);
-				audioG += val * (0.5f - fabs(frac - 0.5f) * 2.0f);
-				audioB += val * frac;
-			}
-			float total = audioR + audioG + audioB;
-			if (total > 0.0f) {
-				audioR /= total; audioG /= total; audioB /= total;
-			}
-			scene->GetLights()[0].color = glm::vec3(1.0f, 0.9f, 0.7f) + glm::vec3(audioR, audioG, audioB) * 0.4f;
-			scene->GetLights()[0].intensity = 3.0f;
-			scene->GetLights()[0].radius = 80.0f;
-
-			shader->Use();
-			shader->SetFloat("wobbleAmount", motionAmount);
-			shader->SetFloat("roundness", tunnelRoundness);
-			shader->SetFloat("haustraStrength", haustraStrength);
-			shader->SetFloat("animSpeed", animationSpeed);
-			shader->SetFloat("time", elapsedTime);
-			shader->SetVec3("objectColor", glm::vec3(0.55f, 0.08f, 0.12f));
-
-			Update();
-			Redraw();
-		}
+	void Run() {
+		Init();
+		auto window = GetWindow();
+		while (!window->ShouldClose()) Step();
 		Destroy();
+	}
+
+	void Step() {
+		ProcessInput();
+		visualizer.Update();
+
+		float totalMagnitude = 0.0f;
+		for (int i = 0; i < NUM_BARS; ++i) {
+			totalMagnitude += visualizer.bandMagnitudes[i];
+		}
+		float avgMagnitude = totalMagnitude / NUM_BARS;
+
+		float speed = baseSpeedElapsedTimeBumpy + (avgMagnitude * audioAmplitudeScale * audioSpeedMultiplier);
+		elapsedTimeBumpy += speed;
+		elapsedTime += baseSpeedElapsedTime;
+
+		float colorR = sin(elapsedTime * bgColorFreq) * 0.5f + 0.5f;
+		float colorG = sin(elapsedTime * bgColorFreq + 2.094f) * 0.5f + 0.5f;
+		float colorB = sin(elapsedTime * bgColorFreq + 4.189f) * 0.5f + 0.5f;
+		SetClearColor(colorR, colorG, colorB);
+
+		pathIndex += baseSpeedElapsedTime * cameraSpeed;
+
+		while (pathIndex > (float)(windowStart / SHIFT) + 1.0f)
+			SlideChunks();
+
+		if (freeCamera) {
+			float dt = fpsCounter.deltaTime;
+			float spd = freeCamSpeed * dt;
+			glm::vec3 cp = camera->GetPos();
+			glm::vec3 right = glm::normalize(glm::cross(camera->front, camera->up));
+			if (window->IsKeyDown(SDL_SCANCODE_W)) cp += camera->front * spd;
+			if (window->IsKeyDown(SDL_SCANCODE_S)) cp -= camera->front * spd;
+			if (window->IsKeyDown(SDL_SCANCODE_A)) cp -= right * spd;
+			if (window->IsKeyDown(SDL_SCANCODE_D)) cp += right * spd;
+			if (window->IsKeyDown(SDL_SCANCODE_SPACE)) cp += camera->up * spd;
+			if (window->IsKeyDown(SDL_SCANCODE_LSHIFT)) cp -= camera->up * spd;
+			camera->SetPos(cp);
+			glm::vec3 riderPos = GetGlobalPosition(pathIndex);
+			player->state.position = riderPos;
+			scene->GetLights()[0].position = riderPos;
+		} else {
+			glm::vec3 cameraPos = GetGlobalPosition(pathIndex);
+			camera->SetPos(cameraPos);
+			glm::vec3 tangent = GetGlobalTangent(pathIndex);
+			camera->LookAt(cameraPos + glm::normalize(tangent) * 10.0f);
+			scene->GetLights()[0].position = cameraPos;
+		}
+
+		float audioR = 0.0f, audioG = 0.0f, audioB = 0.0f;
+		for (int i = 0; i < NUM_BARS; i++) {
+			float val = visualizer.bandMagnitudesSmoothed[i];
+			float frac = (float)i / NUM_BARS;
+			audioR += val * (1.0f - frac);
+			audioG += val * (0.5f - fabs(frac - 0.5f) * 2.0f);
+			audioB += val * frac;
+		}
+		float total = audioR + audioG + audioB;
+		if (total > 0.0f) {
+			audioR /= total; audioG /= total; audioB /= total;
+		}
+		scene->GetLights()[0].color = glm::vec3(1.0f, 0.9f, 0.7f) + glm::vec3(audioR, audioG, audioB) * 0.4f;
+		scene->GetLights()[0].intensity = 3.0f;
+		scene->GetLights()[0].radius = 80.0f;
+
+		shader->Use();
+		shader->SetFloat("wobbleAmount", motionAmount);
+		shader->SetFloat("roundness", tunnelRoundness);
+		shader->SetFloat("haustraStrength", haustraStrength);
+		shader->SetFloat("animSpeed", animationSpeed);
+		shader->SetFloat("time", elapsedTime);
+		shader->SetVec3("objectColor", glm::vec3(0.55f, 0.08f, 0.12f));
+
+		Update();
+		Redraw();
 	}
 
 	void InitUI() override {}

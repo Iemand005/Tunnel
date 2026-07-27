@@ -9,6 +9,7 @@ set(KISSFFT_TEST OFF CACHE BOOL "Disable KissFFT tests" FORCE)
 set(KISSFFT_STATIC ON CACHE BOOL "Build static library" FORCE)
 
 set(FE_EXCLUDE_JOLT ON CACHE BOOL "Disable JOLT" FORCE)
+set(FE_EXCLUDE_KISSFFT ON CACHE BOOL "Exclude kissfft from the build" FORCE)
 
 set(ENGINE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../FenixEngine")
 
@@ -48,11 +49,18 @@ file(GLOB_RECURSE IMGUI_SOURCE_FILES
 	${IMGUI_DIR}/imgui_draw.cpp
 )
 
-add_executable(Tunnel
-	WIN32
-	${IMGUI_SOURCE_FILES}
-	main.cpp
-)
+if(EMSCRIPTEN)
+    add_executable(Tunnel
+        ${IMGUI_SOURCE_FILES}
+        main.cpp
+    )
+else()
+    add_executable(Tunnel
+        WIN32
+        ${IMGUI_SOURCE_FILES}
+        main.cpp
+    )
+endif()
 
 target_include_directories(Tunnel PRIVATE
 	include

@@ -35,6 +35,15 @@ void LogToFile(const std::string& message)
 	catch (...) { }
 }
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+
+static void EmscriptenLoopWrapper(void* arg) {
+    auto* engine = static_cast<Tunnel*>(arg);
+    engine->Step();
+}
+#endif
+
 int main() {
 
 	std::cout << "Hiii" << std::endl;
@@ -53,17 +62,17 @@ int main() {
 	Tunnel game;
 
 
-if (xss_window) {
-	char* endptr;
-	long unsigned int long parent_id = strtoul(xss_window, &endptr, 0);
-	if (endptr != xss_window) {
-		// Valid window ID from xscreensaver
-		game.ActivateScreenSaverMode(ScreenSaverMode::Preview, (void*)parent_id);
+	if (xss_window) {
+		char* endptr;
+		long unsigned int long parent_id = strtoul(xss_window, &endptr, 0);
+		if (endptr != xss_window) {
+			// Valid window ID from xscreensaver
+			game.ActivateScreenSaverMode(ScreenSaverMode::Preview, (void*)parent_id);
+		}
 	}
-}
 
-game.Run();
-return 0;
+	game.Run();
+	return 0;
 }
 
 #ifdef _WIN32
