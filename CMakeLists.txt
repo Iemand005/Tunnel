@@ -9,7 +9,9 @@ set(KISSFFT_TEST OFF CACHE BOOL "Disable KissFFT tests" FORCE)
 set(KISSFFT_STATIC ON CACHE BOOL "Build static library" FORCE)
 
 set(FE_EXCLUDE_JOLT ON CACHE BOOL "Disable JOLT" FORCE)
-set(FE_EXCLUDE_KISSFFT ON CACHE BOOL "Exclude kissfft from the build" FORCE)
+# Do NOT set FE_EXCLUDE_KISSFFT here: the Engine (and the audio visualiser)
+# are shared across the meta build, and a cached FORCE value poisons every
+# sibling project on the next reconfigure.
 
 set(ENGINE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../FenixEngine")
 
