@@ -71,7 +71,7 @@ int main() {
 		}
 	}
 
-	game.Run();
+	game.run();
 	return 0;
 }
 
@@ -162,7 +162,7 @@ int WINAPI WinMain(
         game.ActivateScreenSaverMode(mode, previewHwnd);
         
         LogToFile("Running game...");
-        game.Run();
+        game.run();
         
         LogToFile("Game exited normally");
     }
