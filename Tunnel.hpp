@@ -123,7 +123,7 @@ public:
 	}
 
 	void GrowPath(int count) {
-		float t = GetWindow()->GetTime();
+		float t = getWindow()->GetTime();
 		int freeSeg = (path.size() - 4) / 3;
 		float sl = segmentLength;
 		for (int i = 0; i < count; i++) {
@@ -248,7 +248,7 @@ public:
 
 	void ProcessInput() {
 		SDL_Event event;
-		fe::SDLWindow *window = GetWindow<fe::SDLWindow>();
+		fe::SDLWindow *window = getWindow<fe::SDLWindow>();
 		while (window->PollSDLEvent(&event)) {
 			ImGui_ImplSDL3_ProcessEvent(&event);
 			auto io = ImGui::GetIO();
@@ -305,7 +305,7 @@ public:
 	}
 
 	void Init() override {
-		auto window = this->GetWindow<fe::SDLWindow>();
+		auto window = this->getWindow<fe::SDLWindow>();
 		window->Show();
 		window->DisableVSync();
 
@@ -326,7 +326,7 @@ public:
 	// }
 
 	void Step() override {
-		auto window = GetWindow<fe::SDLWindow>();
+		auto window = getWindow<fe::SDLWindow>();
 
 		ProcessInput();
 		visualizer.Update();
