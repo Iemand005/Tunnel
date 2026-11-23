@@ -402,7 +402,7 @@ public:
 		Redraw();
 	}
 
-	void InitUI() override {}
+	void initUI() override {}
 
 	void DrawAudioVisualizer() {
 		ImGui::SetNextWindowSize(ImVec2(440, 240), ImGuiCond_FirstUseEver);
@@ -435,7 +435,7 @@ public:
 		ImGui::End();
 	}
 
-	void DrawUI() override {
+	void drawUI() override {
 		if (!showDebugUI) return;
 		BeginFrame();
 
